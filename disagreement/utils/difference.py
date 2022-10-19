@@ -1,17 +1,18 @@
 import difflib
 from docx import Document
+import re
 
 
-def list_from_file(file_name):
-    document = Document(file_name)
+def list_from_file(file):
+    document = Document(file)
     paragraphs = []
     for paragraph in document.paragraphs:
-        paragraphs.append(paragraph.text)
+        paragraphs.append(re.sub(r'^\d{0,2}\.?,?\d{0,2}\.?,?\d{0,2}\.?,? ', '', paragraph.text).strip())
     return paragraphs
 
 
-def get_diff(file_name1, file_name2):
-    diff_items = difflib.ndiff(list_from_file(file_name1), list_from_file(file_name2))
+def get_diff(file1, file2):
+    diff_items = difflib.ndiff(list_from_file(file1), list_from_file(file2), charjunk=difflib.IS_CHARACTER_JUNK)
     diffs = []
     current_flag = '+'
     first_column = ' '
@@ -36,7 +37,7 @@ def get_diff(file_name1, file_name2):
     return diffs
 
 
-def save_disagreement(name1, name2):
+def save_disagreement(file1, file2):
     rows = 1
     cols = 2
     result = Document()
@@ -46,7 +47,8 @@ def save_disagreement(name1, name2):
     heading_cells[0].text = 'Редакция заказчика'
     heading_cells[1].text = 'Редакция исполнителя'
 
-    diffs = get_diff(name1, name2)
+    diffs = get_diff(file1, file2)
+    print(len(diffs))
     for diff in diffs:
         cells = table.add_row().cells
         cells[0].text = diff[0]
@@ -55,7 +57,7 @@ def save_disagreement(name1, name2):
     result.save('disagreement.docx')
 
 
-if __name__ == '__main__':
+'''if __name__ == '__main__':
     name1 = 'test1.docx'
     name2 = 'test2.docx'
-    save_disagreement(name1, name2)
+    save_disagreement(name1, name2)'''

@@ -7,6 +7,9 @@ authors = ["a-paktusov@yandex.ru <83519069946>"]
 [tool.poetry.dependencies]
 python = "^3.10"
 python-docx = "^0.8.11"
+fastapi = "^0.85.1"
+uvicorn = "^0.18.3"
+python-multipart = "^0.0.5"
 
 [tool.poetry.dev-dependencies]
 
