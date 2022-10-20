@@ -9,7 +9,9 @@ async def main():
     content = """
         <body>
         <form action="/uploaddocs/" enctype="multipart/form-data" method="post">
-        <input name="files" type="file" multiple>
+        <p>*.txt: <input name="txt" type="file"></p>
+        <p>*.docx: <input name="docx" type="file"></p>
+        <br>
         <input type="submit">
         </form>
         </body>
