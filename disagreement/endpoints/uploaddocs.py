@@ -10,7 +10,7 @@ from disagreement.utils import get_docs
 router = APIRouter()
 
 
-@router.post("/uploaddocs/")
+@router.post("/get_disagreement/", response_class=StreamingResponse)
 async def create_upload_files(
     txt: UploadFile = File(),
     docx: UploadFile = File(),
