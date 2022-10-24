@@ -1,21 +1,17 @@
 import difflib
 from docx import Document
 from docx.enum.text import WD_COLOR_INDEX
-from docx.shared import Cm, Inches
+from docx.shared import Inches
+import io
 import re
 
 
-def list_from_file(document):
-    paragraphs = []
-    for paragraph in document.paragraphs:
-        number = re.search(r'^(\.?,?\d{0,2}){0,4}', paragraph.text)
-        text = re.sub(r'\ {2,}', ' ',paragraph.text).strip()
-        paragraphs.append(text)
-
+def list_from_file(document: str) -> list:
+    paragraphs = [re.sub(r'\ {2,}', ' ', paragraph).strip() for paragraph in document.split('\n')]
     return paragraphs
 
 
-def get_diff(list1, list2):
+def get_diff(list1: list, list2: list) -> list:
     diff_items = difflib.ndiff(list1, list2)
     diffs = []
     current_flag = None
@@ -23,10 +19,6 @@ def get_diff(list1, list2):
     second_column = ''
 
     for diff in diff_items:
-        '''if diff[0] == ' ':
-            continue
-        print(diff)'''
-
         if diff[0] == '-':
             if current_flag:
                 diffs.append((first_column, second_column))
@@ -43,7 +35,7 @@ def get_diff(list1, list2):
     return diffs
 
 
-def save_disagreement(file1, file2):
+def save_disagreement(file1: str, file2: str, count_error: int) -> io.BytesIO:
     result = Document()
     result.add_heading('Протокол разногласий')
     table = result.add_table(rows=1, cols=3)
@@ -87,8 +79,11 @@ def save_disagreement(file1, file2):
                 run1 = paragraph1.add_run(text1[i1:i2])
                 run2 = paragraph2.add_run(text2[j1:j2])
 
-        diff_error = 1
-        if left_diff_count <= diff_error and right_diff_count <= diff_error:
+        if left_diff_count <= count_error and right_diff_count <= count_error:
             table._tbl.remove(table.rows[-1]._tr)
 
-    result.save('disagreements.docx')
+    file_stream = io.BytesIO()
+    result.save(file_stream)
+    file_stream.seek(0)
+
+    return file_stream
