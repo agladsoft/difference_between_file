@@ -6,12 +6,8 @@ import io
 import re
 
 
-def list_from_file(document: Document) -> list:
-    paragraphs = []
-    for paragraph in document.paragraphs:
-        text = re.sub(r'\ {2,}', ' ', paragraph.text).strip()
-        paragraphs.append(text)
-
+def list_from_file(document: str) -> list:
+    paragraphs = [re.sub(r'\ {2,}', ' ', paragraph).strip() for paragraph in document.split('\n')]
     return paragraphs
 
 
@@ -39,7 +35,7 @@ def get_diff(list1: list, list2: list) -> list:
     return diffs
 
 
-def save_disagreement(file1: Document, file2: Document, count_error: int) -> io.BytesIO:
+def save_disagreement(file1: str, file2: str, count_error: int) -> io.BytesIO:
     result = Document()
     result.add_heading('Протокол разногласий')
     table = result.add_table(rows=1, cols=3)

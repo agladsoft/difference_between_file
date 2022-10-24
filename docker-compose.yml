@@ -1,0 +1,12 @@
+version: "3.7"
+
+services:
+  disagreement:
+    build:
+      context: .
+      dockerfile: ./deploy/disagreement/Dockerfile
+    restart: always
+    ports:
+      - '8000:8000'
+    volumes:
+      - ./:/opt/app
