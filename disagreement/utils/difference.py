@@ -97,5 +97,3 @@ def save_disagreement(file1: str, file2: str, count_error: int) -> io.BytesIO:
     file_stream.seek(0)
 
     return file_stream
-
-
