@@ -1,24 +1,24 @@
+import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-import uvicorn
 
-from disagreement.config import get_settings, DefaultSettings
+from disagreement.config import get_settings
 from disagreement.endpoints import list_of_routes
 
 
-def bind_routes(application: FastAPI, setting: DefaultSettings) -> None:
+def bind_routes(application: FastAPI) -> None:
     for route in list_of_routes:
         application.include_router(route)
 
 
 def get_app() -> FastAPI:
-    description = 'A service that implements the ability to compare two contracts' \
-                  ' and generates a protocol of disagreements'
+    description = """A service that implements the ability to compare two contracts
+                    and generates a protocol of disagreements"""
 
     tags_metadata = [
         {
-            'name': 'Disagreement protocol service',
-            'description': 'API disagreement protocol.',
+            "name": "Disagreement protocol service",
+            "description": "API disagreement protocol.",
         },
     ]
 
@@ -31,27 +31,26 @@ def get_app() -> FastAPI:
         openapi_tags=tags_metadata,
     )
     settings = get_settings()
-    bind_routes(application, settings)
+    bind_routes(application)
     application.state.settings = settings
     return application
 
 
 app = get_app()
 
-origins = ['*']
+origins = ["*"]
 
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
     allow_credentials=True,
-    allow_methods=['*'],
-    allow_headers=['*'],
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     uvicorn.run(
         app,
-        host='0.0.0.0',
+        host="0.0.0.0",
         port=8000,
     )
-
