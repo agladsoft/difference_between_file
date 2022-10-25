@@ -1,8 +1,9 @@
 from fastapi import APIRouter
 from fastapi.responses import StreamingResponse
 
-from disagreement.utils import save_disagreement
 from disagreement.schemas.input_data import InputData
+from disagreement.utils import save_disagreement
+
 
 router = APIRouter()
 
