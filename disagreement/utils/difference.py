@@ -5,9 +5,11 @@ from docx.shared import Inches
 import io
 import re
 
+from disagreement.acceptable import skips, replacements
+
 
 def list_from_file(document: str) -> list:
-    paragraphs = [re.sub(r'\ {2,}', ' ', paragraph).strip() for paragraph in document.split('\n')]
+    paragraphs = [re.sub(r'\ {2,}', ' ', paragraph).replace('\xa0', ' ').strip() for paragraph in document.split('\n')]
     return paragraphs
 
 
@@ -52,32 +54,40 @@ def save_disagreement(file1: str, file2: str, count_error: int) -> io.BytesIO:
     list1, list2 = list_from_file(file1), list_from_file(file2)
     diffs = get_diff(list1, list2)
     for diff in diffs:
-        number = re.search(r'^(\.?,?\d{0,2}){0,4}', diff[0])[0]
+        match_number = re.search(r'^(\.?,?\d{0,2}){0,4} ', diff[0])
+        number = match_number[0] if match_number else ''
         text1, text2 = [re.sub(r'(?:^(\.?,?\d{0,2}){0,4} |\.?,?$)', '', text).strip() for text in diff]
 
         cells = table.add_row().cells
-        cells[0].width = Inches(0.5)
-        cells[1].width = Inches(3.2)
-        cells[2].width = Inches(3.2)
+        cells[0].width = Inches(0.6)
+        cells[1].width = Inches(3)
+        cells[2].width = Inches(3)
         cells[0].text = number
 
         left_diff_count = 0
         right_diff_count = 0
 
-        for op, i1, i2, j1, j2 in difflib.SequenceMatcher(a=text1, b=text2).get_opcodes():
-            paragraph1 = cells[1].paragraphs[0]
-            paragraph2 = cells[2].paragraphs[0]
-            if op in ("delete", "replace"):
-                run1 = paragraph1.add_run(text1[i1:i2])
-                run1.font.highlight_color = WD_COLOR_INDEX.YELLOW
-                left_diff_count += i2 - i1
-            if op in ("insert", "replace"):
-                run2 = paragraph2.add_run(text2[j1:j2])
-                run2.font.highlight_color = WD_COLOR_INDEX.YELLOW
-                right_diff_count += j2 - j1
-            if op == "equal":
-                run1 = paragraph1.add_run(text1[i1:i2])
-                run2 = paragraph2.add_run(text2[j1:j2])
+        sequence = difflib.SequenceMatcher(a=text1.lower(), b=text2.lower(), autojunk=False)
+
+        paragraph1 = cells[1].paragraphs[0]
+        paragraph2 = cells[2].paragraphs[0]
+
+        for op, i1, i2, j1, j2 in sequence.get_opcodes():
+            run1 = paragraph1.add_run(text1[i1:i2])
+            run2 = paragraph2.add_run(text2[j1:j2])
+            if op in ("delete", "insert"):
+                if text1[i1:i2] not in skips:
+                    run1.font.highlight_color = WD_COLOR_INDEX.YELLOW
+                    left_diff_count += i2 - i1
+                if text2[j1:j2] not in skips:
+                    run2.font.highlight_color = WD_COLOR_INDEX.YELLOW
+                    right_diff_count += j2 - j1
+            if op == "replace":
+                if (text1[i1:i2], text2[j1:j2]) not in replacements and (text2[j1:j2], text1[i1:i2]) not in replacements:
+                    run1.font.highlight_color = WD_COLOR_INDEX.YELLOW
+                    run2.font.highlight_color = WD_COLOR_INDEX.YELLOW
+                    left_diff_count += i2 - i1
+                    right_diff_count += j2 - j1
 
         if left_diff_count <= count_error and right_diff_count <= count_error:
             table._tbl.remove(table.rows[-1]._tr)
@@ -87,3 +97,5 @@ def save_disagreement(file1: str, file2: str, count_error: int) -> io.BytesIO:
     file_stream.seek(0)
 
     return file_stream
+
+
