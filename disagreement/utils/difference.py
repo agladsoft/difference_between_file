@@ -9,8 +9,13 @@ from docx.shared import Inches
 from disagreement.acceptable import replacements, skips
 
 
-def list_from_file(document: str) -> list:
-    paragraphs = [re.sub(r"\ {2,}", " ", paragraph).replace("\xa0", " ").strip() for paragraph in document.split("\n")]
+def list_from_string(document: str) -> list:
+    paragraphs = ['']
+    for paragraph in document.split("\n"):
+        if re.search('^(\.?,?\d{1,2}){1,4}\.?,? ?', paragraph):
+            paragraphs.append(re.sub(r"\ {2,}", " ", paragraph).replace("\xa0", " ").strip())
+        else:
+            paragraphs[-1] += re.sub(r"\ {2,}", " ", paragraph).replace("\xa0", " ").strip()
     return paragraphs
 
 
@@ -52,12 +57,13 @@ def save_disagreement(file1: str, file2: str, count_error: int) -> io.BytesIO:
     heading_cells[2].text = "Редакция исполнителя"
     heading_cells[2].width = Inches(3)
 
-    list1, list2 = list_from_file(file1), list_from_file(file2)
+    list1, list2 = list_from_string(file1), list_from_string(file2)
+    #print(list1, list2)
     diffs = get_diff(list1, list2)
     for diff in diffs:
-        match_number = re.search(r"^(\.?,?\d{0,2}){0,4} ", diff[0])
+        match_number = re.search(r"^(\.?,?\d{0,2}){0,4} ?", diff[0])
         number = match_number[0] if match_number else ""
-        text1, text2 = [re.sub(r"(?:^(\.?,?\d{0,2}){0,4} |\.?,?$)", "", text).strip() for text in diff]
+        text1, text2 = [re.sub(r"(?:^(\.?,?\d{0,2}){0,4} ?|\.?,?$)", "", text).strip() for text in diff]
 
         cells = table.add_row().cells
         cells[0].width = Inches(0.6)
