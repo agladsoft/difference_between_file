@@ -156,7 +156,7 @@ def save_disagreement(file1: str, file2: str, count_error: int) -> io.BytesIO:
             table._tbl.remove(table.rows[-1]._tr)
 
     file_stream = io.BytesIO()
-    result.save('file_stream.docx')
+    result.save(file_stream)
     file_stream.seek(0)
 
     return file_stream
